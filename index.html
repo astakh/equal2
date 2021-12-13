@@ -3,21 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <title>WavesBoard</title>
-    <link rel="icon" href="./src/favicon.png" size="32x32">  
+    <link rel="icon" href="./src/favicon.png" size="32x32"> 
+    <link rel="stylesheet" href="main.css"> 
 </head>
 <body>
 
 <main>
-    <div id="loginstatus">Please: </div><button id="login">Log in</button><br/>
-    <div id="clameraddress"></div><br/>
-    <div id="clamerstatus"></div><br/>
-    <div id="clameblock" style="visibility: hidden;">
-        <div>Clame your Equals<div>
-        <div><input type="text" id="transaction" size="50" placeholder="Insert id of your transaction"></div><br/>
-        <button value="Clame" id="js-invoke">Clame</button><br/>
-        <div class="answer"></div><br/>
+    <div>
+    <div id="top" class="block">menu: about/airdrop/buy/exchange </div>
+    <div id="loginline" class="block">
+        <div id="loginstatus" class="header">Please: </div>
+        <button id="login">Log in</button> 
     </div>
-
+    <div id="progressblock" class="block">
+        <table>
+            <tr><td class="header">Issued:</td><td id="issue" style="text-align: right;"></td></tr>
+            <tr><td class="header">Free dropped:</td><td id="drop" style="text-align: right;"></td></tr>
+            <tr><td class="header">Sold1:</td><td id="sold1" style="text-align: right;"></td></tr>
+            <tr><td class="header">Sold2:</td><td id="sold2" style="text-align: right;"></td></tr>
+            <tr><td class="header">Team:</td><td id="team" style="text-align: right;"></td></tr>
+            <tr><td class="header">Burnt:</td><td id="burnt" style="text-align: right;"></td></tr>
+            <tr><td class="header">For distribute:</td><td id="distr" style="text-align: right;"></td></tr>
+        </table>
+    </div>
+    <div id="statusblock" class="block">
+        <div class="header">Your status: </div>
+        <div id="clamerstatus">.</div>
+    </div>
+    <div id="messageblock" class="block">
+        <div class="header">Result message: </div>
+        <div id="message">.</div>
+    </div>
+    </div>
+    <div style="position: relative;">
+    <div id="clameblock"  class="block" style="position: absolute; visibility: hidden;">
+        <div class="header">Clame your tokens</div>
+        <div class="header"><input type="text" id="transaction" size="50" placeholder="Insert id of your transaction"></div> 
+        <button value="Clame" id="js-invoke">Clame</button> 
+    </div>
+    <div id="buy1block"  class="block" style="position: absolute; visibility: hidden;">
+        <div class="header">Now you can buy1</div>
+        <button id="buy1">Buy</button> 
+    </div>
+    <div id="buy2block"  class="block" style="position: absolute; visibility: hidden;">
+        <div class="header">Now you can buy2</div>
+        <button id="buy2">Buy</button> 
+    </div>
+    </div>
+    <div id="userstatus" style="visibility: hidden;"></div>
+    <div id="useradress" style="visibility: hidden;"></div>
 </main>
 
 <script src="./dist/dapp.js"></script>
