@@ -33,13 +33,12 @@ async function userstatus(ua) {
         let req = await nodeInteraction.accountDataByKey(ua,dappAddress,nodeUrl);
         if (req == null) {
             console.log("request returned null");
-            document.getElementById("clamerstatus").innerHTML = " unknown";
+            document.getElementById("claimrstatus").innerHTML = " unknown";
             return 0; }
         else {
             console.log("request answer: " + req.value);
-            document.getElementById("clamerstatus").innerHTML = req.value;
-            document.getElementById("userstatus").innerHTML = req.value; 
-            let answerstr = document.getElementById("userstatus").innerHTML;
+
+            let answerstr = req.value;
             let status = answerstr.split("|");
             console.log("request answer status: " + status.length );
             return status.length; }
@@ -82,31 +81,31 @@ function blockvisibility (s) {
     let i = ditales();
     if (p == -1) {
         document.getElementById("login").style.visibility = "visible";
-        document.getElementById("clameblock").style.visibility = "hidden";
+        document.getElementById("claimblock").style.visibility = "hidden";
         document.getElementById("buy1block").style.visibility = "hidden";
         document.getElementById("buy2block").style.visibility = "hidden";
     }
     if (p == 0) {
         document.getElementById("login").style.visibility = "hidden";
-        document.getElementById("clameblock").style.visibility = "visible";
+        document.getElementById("claimblock").style.visibility = "visible";
         document.getElementById("buy1block").style.visibility = "hidden";
         document.getElementById("buy2block").style.visibility = "hidden";
     }
     if (p == 1) {
         document.getElementById("login").style.visibility = "hidden";
-        document.getElementById("clameblock").style.visibility = "hidden";
+        document.getElementById("claimblock").style.visibility = "hidden";
         document.getElementById("buy1block").style.visibility = "visible";
         document.getElementById("buy2block").style.visibility = "hidden";
     }
     if (p == 2) {
         document.getElementById("login").style.visibility = "hidden";
-        document.getElementById("clameblock").style.visibility = "hidden";
+        document.getElementById("claimblock").style.visibility = "hidden";
         document.getElementById("buy1block").style.visibility = "hidden";
         document.getElementById("buy2block").style.visibility = "visible";
     }
     if (p > 2) {
         document.getElementById("login").style.visibility = "hidden";
-        document.getElementById("clameblock").style.visibility = "hidden";
+        document.getElementById("claimblock").style.visibility = "hidden";
         document.getElementById("buy1block").style.visibility = "hidden";
         document.getElementById("buy2block").style.visibility = "hidden";
     }
@@ -120,7 +119,7 @@ document.getElementById("buy2").addEventListener("click", async function () {
     console.log("action: " + action);
     try {
         const user = await signer.login();
-        //document.getElementById("clameraddress").innerHTML = 'Your address is: ' + user.address;
+        //document.getElementById("claimraddress").innerHTML = 'Your address is: ' + user.address;
         console.log('user: ', user.address);
         document.getElementById("message").innerHTML = " wait, please";
         document.getElementById("buy2block").style.visibility = "hidden";
@@ -165,7 +164,7 @@ document.getElementById("buy1").addEventListener("click", async function () {
     console.log("action: " + action);
     try {
         const user = await signer.login();
-        //document.getElementById("clameraddress").innerHTML = 'Your address is: ' + user.address;
+        //document.getElementById("claimraddress").innerHTML = 'Your address is: ' + user.address;
         console.log('user: ', user.address);
         document.getElementById("message").innerHTML = " wait, please";
         document.getElementById("buy1block").style.visibility = "hidden";
@@ -203,17 +202,17 @@ document.getElementById("buy1").addEventListener("click", async function () {
 
 });
 
-// #clame##################################################################################################
+// #claim##################################################################################################
 document.getElementById("js-invoke").addEventListener("click", async function () {
-    let action = "Clame";
+    let action = "claim";
     console.log("action: " + action);
     try {
         const user = await signer.login();
-        //document.getElementById("clameraddress").innerHTML = 'Your address is: ' + user.address;
+        //document.getElementById("claimraddress").innerHTML = 'Your address is: ' + user.address;
         console.log('user: ', user.address);
         let transaction = document.getElementById("transaction").value;
-        document.getElementById("message").innerHTML = " wait, please... trying to clame";
-        document.getElementById("clameblock").style.visibility = "hidden";
+        document.getElementById("message").innerHTML = " wait, please... trying to claim";
+        document.getElementById("claimblock").style.visibility = "hidden";
         console.log("start invoke for: " + transaction);
         try {
             await signer.invoke({
@@ -226,12 +225,12 @@ document.getElementById("js-invoke").addEventListener("click", async function ()
             let error = await geterror(user.address);
             if (error == "") {
                 let ust = await userstatus(user.address);
-                console.log("clame user status: " + ust);
+                console.log("claim user status: " + ust);
 
                 if (ust == 1) {
                     console.log("received");
                     let v = blockvisibility(ust);
-                    document.getElementById("message").innerHTML = " you received your token" ; 
+                    document.getElementById("message").innerHTML = " you received your tokens" ; 
                 } else { document.getElementById("message").innerHTML = " not received " ; };
                  
             }
@@ -241,7 +240,7 @@ document.getElementById("js-invoke").addEventListener("click", async function ()
             }
 
             
-        } catch (e) { console.error('Clame denied: ' + e); }; 
+        } catch (e) { console.error('claim denied: ' + e); }; 
 
     } catch (e) { console.error('Login rejected: ' + e) };
 
