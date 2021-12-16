@@ -37,8 +37,9 @@ async function userstatus(ua) {
             return 0; }
         else {
             console.log("request answer: " + req.value);
-
             let answerstr = req.value;
+            document.getElementById("claimrstatus").innerHTML = answerstr;
+            document.getElementById("userstatus").innerHTML = answerstr; 
             let status = answerstr.split("|");
             console.log("request answer status: " + status.length );
             return status.length; }
