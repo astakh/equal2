@@ -39,25 +39,28 @@
 </head>
 <body>
     <div class="main">
-        <div class="menu_tools">
+        <div class="menu_tools" style="position: relative;">
             <div class="edit_menu">
                 <button id="edit">Paint</button>
                 <button id="refresh">Refresh</button>
-                <button id="login">Log in</button> <div id="loginmessage">Log in, please</div>
+                <button id="login">Log in</button> 
+                <div id="loginmessage">Log in, please</div>
+                <div id="message">.</div>
+                <div id="savemenu" style="position: relative; visibility: hidden; background-color: aliceblue;" >
+                    <input id="color" type="color">
+                    <button id="save">Save</button>
+                    <button id="closescreen">Close</button><br>
+                    enter url: <input id="url" type="text" ><br>
+                    <canvas id="screen" width="100" height="100" oncontextmenu="return false;" style="border: black;" ></canvas>
+                </div>
             </div>
         </div>
-        <br>
-        <canvas id="paint" width="1" height="1" oncontextmenu="return false;"></canvas>
-        <canvas id="zoom" width="1" height="1" oncontextmenu="return false;" style="position: fixed; visibility: hidden;"></canvas>
-        <div id="savemenu" style="visibility: hidden;" >
-            <input id="color" type="color">
-            <button id="save">Save</button>
-            <button id="closescreen">Close</button>
-            <input id="url" type="text">
-            <canvas id="screen" width="1" height="1" oncontextmenu="return false;" style="position: fixed;"></canvas>
+        <div class="board" style="position: relative;">
+            <canvas id="paint" width="1" height="1" oncontextmenu="return false;" style="position: fixed;"></canvas>
+            <canvas id="zoom" width="1" height="1" oncontextmenu="return false;" style="position: fixed; visibility: hidden;"></canvas>
         </div>
     </div>
-    <div id="message"></div>
+     
     <script src="dist/dapp.js"></script>
 
 </body>

@@ -21,6 +21,11 @@ var paintcommand = "";
 var pricecommand = 0;
 var markedcount  = 0;
 var prevurl = "===";
+var piccoords = document.getElementById("paint").getBoundingClientRect();
+var picx = piccoords.left;
+var picy = piccoords.top; 
+var picw = piccoords.width;
+var pich = piccoords.height; 
 // params###########################
 var xs = 500;
 var ys = 300;
@@ -45,6 +50,14 @@ for(var x = 0; x < xs; x++)  {
 }
 function message(m) {
     document.getElementById("message").innerHTML = m;
+}
+
+function getpiccoords() {
+    piccoords = document.getElementById("paint").getBoundingClientRect();
+    picx = piccoords.left;
+    picy = piccoords.top; 
+    picw = piccoords.width;
+    pich = piccoords.height; 
 }
 
 async function loadpix() {
@@ -173,7 +186,8 @@ async function drawpix() {
     }
 }
 document.getElementById("paint").addEventListener("click", function (e) {
-    if (editmode) {
+    if (editmode && !screenmode) {
+        getpiccoords();
         let cx = Math.min(Math.max(e.clientX - 5*ps, picx), picx + picw - 10*ps);
         let cy = Math.min(Math.max(e.clientY - 5*ps, picy), picy + pich - 10*ps);
         console.log("cursor coords: " + cx + "|" + cy);
@@ -206,7 +220,7 @@ document.getElementById("paint").addEventListener("mousemove", function (e) {
             }
         }
         prevurl = url[px][py];
-        if (url[px][py]=="") { message(""); }
+        if (url[px][py]=="") { message("."); }
         else { message("https://" + url[px][py]); }
     }
 })
@@ -220,6 +234,7 @@ document.getElementById("edit").addEventListener("click", function (e) {
         paintcommand = "";
         pricecommand = 0;    
         markedcount  = 0;
+        getpiccoords();
     }
     message("edit mode: click on board to choose segment for painting");
     console.log("edit mode=" + editmode + ", markedcount=" + markedcount);
@@ -230,6 +245,7 @@ document.getElementById("refresh").addEventListener("click", function(e){
     if (lookmode) {
         console.log("refreshed");
         drawpix();
+        getpiccoords();
         message("refreshed");
     }
 })
@@ -275,6 +291,7 @@ document.getElementById("zoom").addEventListener("click", function() {
         }
     }
     drawScreen();
+    getpiccoords();
 })
 
 document.getElementById("screen").addEventListener("click", function(e) {
@@ -309,11 +326,11 @@ document.getElementById("screen").addEventListener("click", function(e) {
             }
         }
         paintcommand = marked.join("|");
-        message("");
+        message("marked pixes: " + markedcount);
         console.log("paintcommand=" + paintcommand);
     }
     else {
-        message("max 28 pixs per painting");
+        message("max 28 pixes per painting");
     }
 
 })
@@ -332,6 +349,7 @@ document.getElementById("closescreen").addEventListener("click", function() {
     hide("savemenu");
     hide("zoom");
     editmode = false;
+    screenmode = false;
     lookmode = true;
 })
 
@@ -344,12 +362,8 @@ if(canvas.getContext){
     cursor.height= 10*ps;
     screen.width = 10*10;
     screen.height= 10*10;
-    var piccoords = document.getElementById("paint").getBoundingClientRect();
-    var picx = piccoords.left;
-    var picy = piccoords.top; 
-    var picw = piccoords.width;
-    var pich = piccoords.height; 
- 
+
+    getpiccoords();
  
     var ctx = canvas.getContext("2d")
     var crs = cursor.getContext("2d")
