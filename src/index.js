@@ -3,47 +3,80 @@ import { ProviderWeb } from '@waves.exchange/provider-web';
 import { nodeInteraction } from "@waves/waves-transactions";
 import { split } from '@waves/ts-lib-crypto';
 const nodeUrl = 'https://nodes-testnet.wavesnodes.com';
-const dappAddress = '3MxfEq17wZjAWQfckWycU9o4oTkvf9nfNQX';
+const dappAddress = '3MqnjEXWG6rvvRo2UDYRANN8iWLks7snDwj';
 const signer = new Signer({NODE_URL: nodeUrl});
 const provider = new ProviderWeb('https://testnet.waves.exchange/signer/')
 signer.setProvider(provider);
-async function ditales() {
-    let t = await nodeInteraction.accountDataByKey("issued",dappAddress,nodeUrl);
-    let d = await nodeInteraction.accountDataByKey("dropped",dappAddress,nodeUrl);
-    let g = await nodeInteraction.accountDataByKey("teamgift",dappAddress,nodeUrl);
-    let s1= await nodeInteraction.accountDataByKey("sold1",dappAddress,nodeUrl);
-    let s2= await nodeInteraction.accountDataByKey("sold2",dappAddress,nodeUrl);
-    let b = await nodeInteraction.accountDataByKey("burnt",dappAddress,nodeUrl);
-    let bs= await nodeInteraction.accountDataByKey("burningstage",dappAddress,nodeUrl);
-    document.getElementById("issue").innerHTML = t.value/100000000;
-    document.getElementById("drop").innerHTML = d.value/100000000;
-    document.getElementById("sold1").innerHTML = s1.value/100000000;
-    document.getElementById("sold2").innerHTML = s2.value/100000000;
-    document.getElementById("team").innerHTML = g.value/100000000;
-    document.getElementById("burnt").innerHTML = b.value/100000000;
-    document.getElementById("distr").innerHTML = (t.value-d.value-g.value-s1.value-s2.value-b.value)/100000000;
+
+
+var canvas = document.getElementById("paint")
+var cursor = document.getElementById("zoom")
+var screen = document.getElementById("screen")
+//var saveMenu = document.getElementsByClassName("save_menu")[0]
+var scrpix = new Array(10);
+var editmode = false;
+var lookmode = true;
+var screenmode = false; 
+var paintcommand = "";
+var prevurl = "==="
+// params###########################
+var xs = 500;
+var ys = 300;
+var ps = 2;
+
+var screencolor = "";
+var screenwidth = 10;
+var crsx = 0;
+var crsy = 0;
+var pix = new Array(xs)
+var url = new Array(xs)
+for(var x = 0; x < xs; x++)  {
+    pix[x] = new Array(ys);
+    url[x] = new Array(ys);
+    for (var y = 0; y < ys; y++) {
+        pix[x][y] = ""
+        url[x][y] = ""
+    }
+}
+
+
+async function loadpix() {
+    // clear pix
+    for(var x = 0; x < xs; x++)  {
+        pix[x] = new Array(ys);
+        url[x] = new Array(ys);
+        for (var y = 0; y < ys; y++) {
+            pix[x][y] = "black"
+            url[x][y] = ""
+        }
+    }
+    let data = await nodeInteraction.accountDataByKey("",dappAddress,nodeUrl);
+    console.log("data weight: " + data.length );
+
+    data.forEach(function(item, index, array) {
+        let n = parseInt(item.key)
+        if (n>-1) {
+            //console.log(index + ": pix" + n + "-" + item.value);
+            let x = n % xs;
+            let y = parseInt((n - x) / xs);
+            let params = item.value.split("|");
+            if (params.length > 3) { pix[x][y] = params[3];}
+            else {pix[x][y] = "white"}
+            if (params.length > 4) { url[x][y] = params[4];}
+            //console.log("pixx:" + x + " pixy:" + y + "->" + pix[x][y]);
+        }// else {console.log("item.key: " + item.key + " ->" + item.value);}
+    });
+
+    //console.log("in loadpix 0/0 = " + pix[0][0]);
+    return pix;
     
 }
-async function userstatus(ua) {
-    if (ua == '' || ua == null) {
-        console.log("user status: is abcent, return 0");
-        return 0;
-    }
-    else {
-        let req = await nodeInteraction.accountDataByKey(ua,dappAddress,nodeUrl);
-        if (req == null) {
-            console.log("request returned null");
-            document.getElementById("claimrstatus").innerHTML = " unknown";
-            return 0; }
-        else {
-            console.log("request answer: " + req.value);
-            let answerstr = req.value;
-            document.getElementById("claimrstatus").innerHTML = answerstr;
-            document.getElementById("userstatus").innerHTML = answerstr; 
-            let status = answerstr.split("|");
-            console.log("request answer status: " + status.length );
-            return status.length; }
-    }
+
+function hide(el) {
+    document.getElementById(el).style.visibility = "hidden";
+};
+function show(el) {
+    document.getElementById(el).style.visibility = "visible";
 };
 async function geterror(ua) {
     if (ua == '' || ua == null) {
@@ -66,183 +99,232 @@ document.getElementById("login").addEventListener("click", async function () {
     try {
         const user = await signer.login();
         console.log("user: " + user.address);
-        document.getElementById("loginstatus").innerHTML = "Logged in as: " + user.address;
-        let ust = await userstatus(user.address);
-        console.log("user status: " + ust);
-        let v = blockvisibility(ust);
+        document.getElementById("message").innerHTML = "Logged in as: " + user.address;
         
-    } catch (e) { 
-        console.error('login error');
-    };
+    } catch (e) { console.error('login error'); };
 }); 
-// #visibility##################################################################################
-function blockvisibility (s) {
-    let p = s;
-    console.log("blockvisibility userstatus: " + p);
-    let i = ditales();
-    if (p == -1) {
-        document.getElementById("login").style.visibility = "visible";
-        document.getElementById("claimblock").style.visibility = "hidden";
-        document.getElementById("buy1block").style.visibility = "hidden";
-        document.getElementById("buy2block").style.visibility = "hidden";
-    }
-    if (p == 0) {
-        document.getElementById("login").style.visibility = "hidden";
-        document.getElementById("claimblock").style.visibility = "visible";
-        document.getElementById("buy1block").style.visibility = "hidden";
-        document.getElementById("buy2block").style.visibility = "hidden";
-    }
-    if (p == 1) {
-        document.getElementById("login").style.visibility = "hidden";
-        document.getElementById("claimblock").style.visibility = "hidden";
-        document.getElementById("buy1block").style.visibility = "visible";
-        document.getElementById("buy2block").style.visibility = "hidden";
-    }
-    if (p == 2) {
-        document.getElementById("login").style.visibility = "hidden";
-        document.getElementById("claimblock").style.visibility = "hidden";
-        document.getElementById("buy1block").style.visibility = "hidden";
-        document.getElementById("buy2block").style.visibility = "visible";
-    }
-    if (p > 2) {
-        document.getElementById("login").style.visibility = "hidden";
-        document.getElementById("claimblock").style.visibility = "hidden";
-        document.getElementById("buy1block").style.visibility = "hidden";
-        document.getElementById("buy2block").style.visibility = "hidden";
-    }
-    return true;
-};
-blockvisibility(-1);
 
-// #buy2##################################################################################################
-document.getElementById("buy2").addEventListener("click", async function () {
-    let action = "buy2";
+// #paint##################################################################################################
+document.getElementById("save").addEventListener("click", async function () {
+    hide("savemenu");
+    editmode = false;
+    lookmode = true;
+    paintcommand = paintcommand + "||" + screencolor + "||" + document.getElementById("url").value;
+    console.log("paintcommand=" + paintcommand);
+    document.getElementById("zoom").style.visibility = "hidden";
+    //drawpix();
+    //###########################################
+    let action = "save";
     console.log("action: " + action);
     try {
         const user = await signer.login();
         //document.getElementById("claimraddress").innerHTML = 'Your address is: ' + user.address;
         console.log('user: ', user.address);
         document.getElementById("message").innerHTML = " wait, please";
-        document.getElementById("buy2block").style.visibility = "hidden";
-        console.log("start invoke buy2");
+        
+        console.log("start invoke save");
         try {
             await signer.invoke({
                 dApp: dappAddress,
                 call: {
-                    function: "buy",
-                    args:[]
-                },
-                payment: [{amount: 200000000, assetId:null }]
-            }).broadcast({confirmations: 1}).then(resp => console.log(resp));
-
-            let error = await geterror(user.address);
-            if (error == "") {
-                let ust = await userstatus(user.address);
-                console.log("buy2 user status: " + ust);
-
-                if (ust == 3) {
-                    console.log("buy1 saccess");
-                    let v = blockvisibility(ust);
-                    document.getElementById("message").innerHTML = " you bought2" ; 
-                } else { document.getElementById("message").innerHTML = " not bought2 " ; };
-                 
-            }
-            else {
-                document.getElementById("message").innerHTML = " you not bought2, because " + error ; 
-                let v = blockvisibility(0);
-            }
-
-        } catch (e) { console.error('buy2 denied: ' + e); }; 
-
-    } catch (e) { console.error('Login rejected: ' + e) };
-
-});
-
-
-// #buy1##################################################################################################
-document.getElementById("buy1").addEventListener("click", async function () {
-    let action = "buy1";
-    console.log("action: " + action);
-    try {
-        const user = await signer.login();
-        //document.getElementById("claimraddress").innerHTML = 'Your address is: ' + user.address;
-        console.log('user: ', user.address);
-        document.getElementById("message").innerHTML = " wait, please";
-        document.getElementById("buy1block").style.visibility = "hidden";
-        console.log("start invoke buy1");
-        try {
-            await signer.invoke({
-                dApp: dappAddress,
-                call: {
-                    function: "buy",
-                    args:[]
+                    function: "paint",
+                    args:[{"type": "string", "value": paintcommand}]
                 },
                 payment: [{amount: 100000000, assetId:null }]
             }).broadcast({confirmations: 1}).then(resp => console.log(resp));
-            console.log("look for errors");
-            let error = await geterror(user.address);
-            if (error == "") {
-                let ust = await userstatus(user.address);
-                console.log("buy1 user status: " + ust);
 
-                if (ust == 2) {
-                    console.log("buy1 saccess");
-                    let v = blockvisibility(ust);
-                    document.getElementById("message").innerHTML = " you bought1" ; 
-                } else { document.getElementById("message").innerHTML = " not bought1 " ; };
-                 
+            let error = await geterror(user.address);
+            console.log("error: " + error);
+            if (error == "") {
+                document.getElementById("message").innerHTML = " painted" ; 
             }
             else {
-                document.getElementById("message").innerHTML = " you not bought1, because " + error ; 
-                let v = blockvisibility(0);
+                document.getElementById("message").innerHTML = " not painted, because " + error ; 
+
             }
-
-        } catch (e) { console.error('buy1 denied: ' + e); }; 
-
-    } catch (e) { console.error('Login rejected: ' + e) };
+             
+            drawpix();
+        } catch (e) { console.error('save denied: ' + e); }; 
+    } catch (e) { console.error('save Login rejected: ' + e) };
 
 });
 
-// #claim##################################################################################################
-document.getElementById("js-invoke").addEventListener("click", async function () {
-    let action = "claim";
-    console.log("action: " + action);
-    try {
-        const user = await signer.login();
-        //document.getElementById("claimraddress").innerHTML = 'Your address is: ' + user.address;
-        console.log('user: ', user.address);
-        let transaction = document.getElementById("transaction").value;
-        document.getElementById("message").innerHTML = " wait, please... trying to claim";
-        document.getElementById("claimblock").style.visibility = "hidden";
-        console.log("start invoke for: " + transaction);
-        try {
-            await signer.invoke({
-                dApp: dappAddress,
-                call: {
-                    function: "free",
-                    args:[{"type": "string", "value": transaction}]
+// отрисовка картинки
+async function drawpix() {
+    //console.log("in drawpix 0/0 = " + pix[0][0]);
+    pix = await loadpix();
+    for(var x = 0; x < xs; x++) {
+        for(var y = 0; y < ys; y++) {
+            ctx.fillStyle = pix[x][y];
+            ctx.fillRect(x * ps, y * ps, ps, ps);
+        }
+    }
+}
+document.getElementById("paint").addEventListener("click", function (e) {
+    if (editmode) {
+        let cx = Math.min(Math.max(e.clientX - 5*ps, picx), picx + picw - 10*ps);
+        let cy = Math.min(Math.max(e.clientY - 5*ps, picy), picy + pich - 10*ps);
+        console.log("cursor coords: " + cx + "|" + cy);
+        drawCursor(cx, cy);
+    }
+    if (lookmode) {
+        let px = parseInt((e.clientX - picx) / ps); // pixel coords
+        let py = parseInt((e.clientY - picy) / ps);
+        win = window.open("https://" + url[px][py]);
+
+    }
+})
+document.getElementById("paint").addEventListener("mousemove", function (e) {
+    if (lookmode) {
+        let px = parseInt((e.clientX - picx) / ps); // pixel coords
+        let py = parseInt((e.clientY - picy) / ps);
+        console.log("pixel url: " + url[px][py]);
+        
+        for(var x = 0; x < xs; x++)  {
+            for (var y = 0; y < ys; y++) {
+                if (url[x][y] == prevurl) {
+                    ctx.fillStyle = pix[x][y];
+                    ctx.fillRect(x * ps, y * ps, ps, ps);
                 }
-            }).broadcast({confirmations: 1}).then(resp => console.log(resp));
-            let error = await geterror(user.address);
-            if (error == "") {
-                let ust = await userstatus(user.address);
-                console.log("claim user status: " + ust);
-
-                if (ust == 1) {
-                    console.log("received");
-                    let v = blockvisibility(ust);
-                    document.getElementById("message").innerHTML = " you received your tokens" ; 
-                } else { document.getElementById("message").innerHTML = " not received " ; };
-                 
+                if (url[x][y] == url[px][py] && url[px][py] != "") {
+                    //console.log("same url: " + x + "|" + y);
+                    ctx.fillStyle = "white";
+                    ctx.fillRect(x * ps, y * ps, ps, ps);
+                }
             }
-            else {
-                document.getElementById("message").innerHTML = " you not received, because " + error ; 
-                let v = blockvisibility(0);
+        }
+        prevurl = url[px][py];
+        
+    }
+})
+
+document.getElementById("edit").addEventListener("click", function (e) {
+    editmode = true; 
+    lookmode = false;
+    console.log("edit mode=true");
+})
+
+// refresh
+document.getElementById("refresh").addEventListener("click", function(e){
+    if (lookmode) {
+        console.log("refreshed");
+         
+        drawpix();
+    }
+})
+
+function drawCursor(x, y) {
+    crsx = parseInt((x - picx)/ps); // pixel coords
+    crsy = parseInt((y - picy)/ps);
+    console.log("cursor pixel coords: " + crsx + "|" + crsy);
+    if (editmode) {
+        document.getElementById("zoom").style.top = y + "px";
+        document.getElementById("zoom").style.left = x + "px";
+        crs.fillStyle = "red";
+        crs.fillRect(0, 0, 10*ps, 10*ps);
+        //show("zoom");
+        document.getElementById("zoom").style.visibility = "visible";
+    }
+}
+function drawScreen() {
+    if (editmode) {
+        for (var i = 0; i<10; i++) {
+            for (var j = 0; j<10; j++) {
+                if (scrpix[i][j]) {
+                    scr.fillStyle = screencolor;
+                } 
+                else { scr.fillStyle = pix[i+crsx][j+crsy];}
+                scr.fillRect(i*screenwidth, j*screenwidth, screenwidth, screenwidth);
+        
             }
+        }
 
-            
-        } catch (e) { console.error('claim denied: ' + e); }; 
+        //document.getElementById("screen").style.visibility = "visible";
+    }
+}
+document.getElementById("zoom").addEventListener("click", function() {
+    console.log("zoom click");
+    screenmode = true;
+    //show("savemenu");
+    document.getElementById("savemenu").style.visibility = "visible";
+    for (var i=0; i<10; i++) {
+        scrpix[i] = new Array(10);
+        for (var j=0; j<10; j++) {
+            scrpix[i][j] = false;
+        }
+    }
+    drawScreen();
+})
 
-    } catch (e) { console.error('Login rejected: ' + e) };
+document.getElementById("screen").addEventListener("click", function(e) {
+    let scrcoords = document.getElementById("screen").getBoundingClientRect();
+    let px = parseInt((e.clientX - scrcoords.left)/screenwidth);
+    let py = parseInt((e.clientY - scrcoords.top)/screenwidth);
+    scrpix[px][py] = !scrpix[px][py]; 
+    if (scrpix[px][py]) {
+        scr.fillStyle = screencolor;
+        scr.fillRect(px*screenwidth, py*screenwidth, screenwidth, screenwidth);
+        console.log("mark: " + px + "|" + py + " with " + screencolor);
+        console.log("draw: " + px*screenwidth + "|" + py*screenwidth)
+    }
+    else {
+        scr.fillStyle = pix[px+crsx][py+crsy];
+        scr.fillRect(px*screenwidth, py*screenwidth, screenwidth, screenwidth);
+        console.log("unmark: " + px + "|" + py);
+    }
+    console.log("screen click: " + px + "|" + py);   
+    let marked = []
+    let l = 0;
+    for (var i=0; i<10; i++) {
+        for (var j=0; j<10; j++) {
+            if (scrpix[i][j]) {
+                marked[l] = (i+crsx)+(j+crsy)*xs;
+                l = l+1;
+            };
+        }
+    }
+    paintcommand = marked.join("|");
+    console.log("paintcommand=" + paintcommand);
 
-});
+})
+
+
+document.getElementById("color").addEventListener("click", function() {
+    if (screenmode) {
+    screencolor = document.getElementById("color").value;
+    drawScreen()
+    }
+})
+ 
+document.getElementById("closescreen").addEventListener("click", function() {
+    document.getElementById("savemenu").style.visibility = "hidden";
+    editmode = false;
+    lookmode = true;
+    document.getElementById("zoom").style.visibility = "hidden";
+})
+
+
+// Точка входа в скрипт 
+if(canvas.getContext){
+    canvas.width = xs*ps;
+    canvas.height= ys*ps;
+    cursor.width = 10*ps;
+    cursor.height= 10*ps;
+    screen.width = 10*10*ps;
+    screen.height= 10*10*ps;
+    var piccoords = document.getElementById("paint").getBoundingClientRect();
+    var picx = piccoords.left;
+    var picy = piccoords.top; 
+    var picw = piccoords.width;
+    var pich = piccoords.height; 
+ 
+ 
+    var ctx = canvas.getContext("2d")
+    var crs = cursor.getContext("2d")
+    var scr = screen.getContext("2d")
+
+    drawCursor();
+    drawpix();
+
+    //drawField(10)
+}
