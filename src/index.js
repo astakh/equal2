@@ -1,7 +1,7 @@
 import { Signer } from '@waves/signer';
 import { ProviderWeb } from '@waves.exchange/provider-web';
 import { nodeInteraction } from "@waves/waves-transactions";
-import { split } from '@waves/ts-lib-crypto';
+import { messageDecrypt, split } from '@waves/ts-lib-crypto';
 const nodeUrl = 'https://nodes-testnet.wavesnodes.com';
 const dappAddress = '3MqnjEXWG6rvvRo2UDYRANN8iWLks7snDwj';
 const signer = new Signer({NODE_URL: nodeUrl});
@@ -18,7 +18,9 @@ var editmode = false;
 var lookmode = true;
 var screenmode = false; 
 var paintcommand = "";
-var prevurl = "==="
+var pricecommand = 0;
+var markedcount  = 0;
+var prevurl = "===";
 // params###########################
 var xs = 500;
 var ys = 300;
@@ -28,17 +30,22 @@ var screencolor = "";
 var screenwidth = 10;
 var crsx = 0;
 var crsy = 0;
-var pix = new Array(xs)
-var url = new Array(xs)
+var pix  = new Array(xs)
+var url  = new Array(xs)
+var price= new Array(xs);
 for(var x = 0; x < xs; x++)  {
-    pix[x] = new Array(ys);
-    url[x] = new Array(ys);
+    pix[x]  = new Array(ys);
+    url[x]  = new Array(ys);
+    price[x]= new Array(ys);
     for (var y = 0; y < ys; y++) {
-        pix[x][y] = ""
-        url[x][y] = ""
+        pix[x][y] = "";
+        url[x][y] = "";
+        price[x][y] = 0;
     }
 }
-
+function message(m) {
+    document.getElementById("message").innerHTML = m;
+}
 
 async function loadpix() {
     // clear pix
@@ -99,14 +106,19 @@ document.getElementById("login").addEventListener("click", async function () {
     try {
         const user = await signer.login();
         console.log("user: " + user.address);
-        document.getElementById("message").innerHTML = "Logged in as: " + user.address;
+        document.getElementById("loginmessage").innerHTML = " Logged in as: " + user.address;
+        hide("login");
         
     } catch (e) { console.error('login error'); };
 }); 
 
-// #paint##################################################################################################
+// save##################################################################################################
 document.getElementById("save").addEventListener("click", async function () {
     hide("savemenu");
+    editmode     = true; 
+    show("edit");
+    lookmode     = false;
+    show("refresh");
     editmode = false;
     lookmode = true;
     paintcommand = paintcommand + "||" + screencolor + "||" + document.getElementById("url").value;
@@ -166,12 +178,12 @@ document.getElementById("paint").addEventListener("click", function (e) {
         let cy = Math.min(Math.max(e.clientY - 5*ps, picy), picy + pich - 10*ps);
         console.log("cursor coords: " + cx + "|" + cy);
         drawCursor(cx, cy);
+        message("click on segment to edit it");
     }
     if (lookmode) {
         let px = parseInt((e.clientX - picx) / ps); // pixel coords
         let py = parseInt((e.clientY - picy) / ps);
-        win = window.open("https://" + url[px][py]);
-
+        if (url[px][py] != "") {win = window.open("https://" + url[px][py]);}
     }
 })
 document.getElementById("paint").addEventListener("mousemove", function (e) {
@@ -194,22 +206,31 @@ document.getElementById("paint").addEventListener("mousemove", function (e) {
             }
         }
         prevurl = url[px][py];
-        
+        if (url[px][py]=="") { message(""); }
+        else { message("https://" + url[px][py]); }
     }
 })
 
 document.getElementById("edit").addEventListener("click", function (e) {
-    editmode = true; 
-    lookmode = false;
-    console.log("edit mode=true");
+    if (lookmode){
+        editmode     = true; 
+        hide("edit");
+        lookmode     = false;
+        hide("refresh");
+        paintcommand = "";
+        pricecommand = 0;    
+        markedcount  = 0;
+    }
+    message("edit mode: click on board to choose segment for painting");
+    console.log("edit mode=" + editmode + ", markedcount=" + markedcount);
 })
 
 // refresh
 document.getElementById("refresh").addEventListener("click", function(e){
     if (lookmode) {
         console.log("refreshed");
-         
         drawpix();
+        message("refreshed");
     }
 })
 
@@ -257,61 +278,72 @@ document.getElementById("zoom").addEventListener("click", function() {
 })
 
 document.getElementById("screen").addEventListener("click", function(e) {
+
     let scrcoords = document.getElementById("screen").getBoundingClientRect();
     let px = parseInt((e.clientX - scrcoords.left)/screenwidth);
     let py = parseInt((e.clientY - scrcoords.top)/screenwidth);
-    scrpix[px][py] = !scrpix[px][py]; 
-    if (scrpix[px][py]) {
-        scr.fillStyle = screencolor;
-        scr.fillRect(px*screenwidth, py*screenwidth, screenwidth, screenwidth);
-        console.log("mark: " + px + "|" + py + " with " + screencolor);
-        console.log("draw: " + px*screenwidth + "|" + py*screenwidth)
+    if ((markedcount<29 && scrpix[px][py]==true) || (markedcount<28 && scrpix[px][py]==false)){
+        scrpix[px][py] = !scrpix[px][py]; 
+        if (scrpix[px][py]) {
+            markedcount++;
+            scr.fillStyle = screencolor;
+            scr.fillRect(px*screenwidth, py*screenwidth, screenwidth, screenwidth);
+        }
+        else {
+            markedcount--;
+            scr.fillStyle = pix[px+crsx][py+crsy];
+            scr.fillRect(px*screenwidth, py*screenwidth, screenwidth, screenwidth);
+        }
+        console.log("marked: " + markedcount);
+        console.log("screen click: " + px + "|" + py);   
+        let marked = []
+        let l = 0;
+        pricecommand = 0;
+        for (var i=0; i<10; i++) {
+            for (var j=0; j<10; j++) {
+                if (scrpix[i][j]) {
+                    marked[l] = (i+crsx)+(j+crsy)*xs;
+                    l++;
+                    pricecommand += price[px+crsx][py+crsy];
+                };
+            }
+        }
+        paintcommand = marked.join("|");
+        message("");
+        console.log("paintcommand=" + paintcommand);
     }
     else {
-        scr.fillStyle = pix[px+crsx][py+crsy];
-        scr.fillRect(px*screenwidth, py*screenwidth, screenwidth, screenwidth);
-        console.log("unmark: " + px + "|" + py);
+        message("max 28 pixs per painting");
     }
-    console.log("screen click: " + px + "|" + py);   
-    let marked = []
-    let l = 0;
-    for (var i=0; i<10; i++) {
-        for (var j=0; j<10; j++) {
-            if (scrpix[i][j]) {
-                marked[l] = (i+crsx)+(j+crsy)*xs;
-                l = l+1;
-            };
-        }
-    }
-    paintcommand = marked.join("|");
-    console.log("paintcommand=" + paintcommand);
 
 })
 
 
-document.getElementById("color").addEventListener("click", function() {
+document.getElementById("color").addEventListener("change", function() {
     if (screenmode) {
     screencolor = document.getElementById("color").value;
-    drawScreen()
+    drawScreen();
     }
 })
  
 document.getElementById("closescreen").addEventListener("click", function() {
-    document.getElementById("savemenu").style.visibility = "hidden";
+    show("edit");
+    show("refresh");    
+    hide("savemenu");
+    hide("zoom");
     editmode = false;
     lookmode = true;
-    document.getElementById("zoom").style.visibility = "hidden";
 })
 
 
-// Точка входа в скрипт 
+//###################################################################
 if(canvas.getContext){
     canvas.width = xs*ps;
     canvas.height= ys*ps;
     cursor.width = 10*ps;
     cursor.height= 10*ps;
-    screen.width = 10*10*ps;
-    screen.height= 10*10*ps;
+    screen.width = 10*10;
+    screen.height= 10*10;
     var piccoords = document.getElementById("paint").getBoundingClientRect();
     var picx = piccoords.left;
     var picy = piccoords.top; 
