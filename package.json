@@ -11,7 +11,8 @@
         "@waves.exchange/provider-web": "^1.0.2",
         "@waves/signer": "^1.0.2",
         "@waves/waves-transactions": "*",
-        "webpack": "*"
+        "webpack": "*",
+        "http-server": "^0.12.1"
     },
     "devDependencies": {
         "webpack-cli": "^3.3.10",

@@ -56,6 +56,22 @@ for(var x = 0; x < xs; x++)  {
 function message(m) {
     document.getElementById("message").innerHTML = m;
 }
+function topaintmode() {
+    editmode     = true; 
+    lookmode     = false;
+    hide("edit");
+    hide("refresh");
+    hide("zoom");
+}
+function tolookmode() {
+    editmode    = false; 
+    screenmode  = false;
+    lookmode    = true;
+    show("edit");
+    show("refresh");
+    hide("savemenu");
+    hide("zoom");
+}
 
 function getpiccoords() {
     piccoords = document.getElementById("paint").getBoundingClientRect();
@@ -184,11 +200,8 @@ document.getElementById("save").addEventListener("click", async function () {
         message("log in rejected");
         console.error('save Login rejected: ' + e) 
     };
-    editmode = false;
-    screenmode = false;
-    lookmode = true;
-    show("refresh");
-    show("edit");
+    tolookmode();
+
 });
 
 // отрисовка картинки
@@ -214,7 +227,7 @@ document.getElementById("paint").addEventListener("click", function (e) {
         console.log("savemenu coords: " + savemenux + "|" + savemenuy);
         document.getElementById("savemenu").style.left = savemenux + "px";
         document.getElementById("savemenu").style.top  = savemenuy + "px";
-        message("click on segment to edit it");
+        message("<b>paint mode:</b> click on segment to edit it");
     }
     if (lookmode) {
         let px = parseInt((e.clientX - picx) / ps); // pixel coords
@@ -249,10 +262,7 @@ document.getElementById("paint").addEventListener("mousemove", function (e) {
 
 document.getElementById("edit").addEventListener("click", function (e) {
     if (lookmode){
-        editmode     = true; 
-        hide("edit");
-        lookmode     = false;
-        hide("refresh");
+        topaintmode();
         paintcommand = "";
         pricecommand = 0;    
         markedcount  = 0;
@@ -268,7 +278,7 @@ document.getElementById("refresh").addEventListener("click", function(e){
         console.log("refreshed");
         drawpix();
         getpiccoords();
-        message("refreshed");
+        message("look mode: refreshed");
     }
 })
 
@@ -281,8 +291,7 @@ function drawCursor(x, y) {
         document.getElementById("zoom").style.left = x + "px";
         crs.fillStyle = "red";
         crs.fillRect(0, 0, 10*ps, 10*ps);
-        //show("zoom");
-        document.getElementById("zoom").style.visibility = "visible";
+        show("zoom");
     }
 }
 function drawScreen() {
@@ -367,14 +376,7 @@ document.getElementById("color").addEventListener("change", function() {
 })
  
 document.getElementById("closescreen").addEventListener("click", function() {
-    show("edit");
-    show("refresh");    
-    hide("savemenu");
-    hide("zoom");
-    editmode = false;
-    screenmode = false;
-    lookmode = true;
-})
+    tolookmode(); })
 
 
 //###################################################################
