@@ -35,6 +35,10 @@
         #paint{
             border: 0px solid rgb(90, 90, 90);
         }
+        @keyframes blink {
+            from { opacity: 1; /* Непрозрачный текст */ }
+            to { opacity: 0; /* Прозрачный текст */ }
+        }
     </style>
 </head>
 <body>
@@ -45,18 +49,18 @@
                 <button id="refresh">Refresh</button>
                 <button id="login">Log in</button> 
                 <div id="loginmessage">Log in, please</div>
-                <div id="message">.</div>
-                <div id="savemenu" style="position: relative; visibility: hidden; background-color: aliceblue;" >
+                <div id="message" >.</div>
+                <div id="savemenu" style="padding: 4px; z-index:99; position: fixed; visibility: hidden; background-color: aliceblue;" >
                     <input id="color" type="color">
                     <button id="save">Save</button>
                     <button id="closescreen">Close</button><br>
                     enter url: <input id="url" type="text" ><br>
-                    <canvas id="screen" width="100" height="100" oncontextmenu="return false;" style="border: black;" ></canvas>
+                    <canvas id="screen" width="100" height="100" oncontextmenu="return false;"  style="border: black;" ></canvas>
                 </div>
             </div>
         </div>
         <div class="board" style="position: relative;">
-            <canvas id="paint" width="1" height="1" oncontextmenu="return false;" style="position: fixed;"></canvas>
+            <canvas id="paint" width="1" height="1" oncontextmenu="return false;" style="z-index:0; position: fixed;"></canvas>
             <canvas id="zoom" width="1" height="1" oncontextmenu="return false;" style="position: fixed; visibility: hidden;"></canvas>
         </div>
     </div>

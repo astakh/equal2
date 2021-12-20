@@ -4,6 +4,7 @@ import { nodeInteraction } from "@waves/waves-transactions";
 import { messageDecrypt, split } from '@waves/ts-lib-crypto';
 const nodeUrl = 'https://nodes-testnet.wavesnodes.com';
 const dappAddress = '3MqnjEXWG6rvvRo2UDYRANN8iWLks7snDwj';
+const token = null;
 const signer = new Signer({NODE_URL: nodeUrl});
 const provider = new ProviderWeb('https://testnet.waves.exchange/signer/')
 signer.setProvider(provider);
@@ -26,9 +27,13 @@ var picx = piccoords.left;
 var picy = piccoords.top; 
 var picw = piccoords.width;
 var pich = piccoords.height; 
+var savemenux = 0;
+var savemenuy = 0;
 // params###########################
 var xs = 500;
 var ys = 300;
+var initprice = 100000;
+var masterfee = 1;
 var ps = 2;
 
 var screencolor = "";
@@ -45,7 +50,7 @@ for(var x = 0; x < xs; x++)  {
     for (var y = 0; y < ys; y++) {
         pix[x][y] = "";
         url[x][y] = "";
-        price[x][y] = 0;
+        price[x][y] = initprice;
     }
 }
 function message(m) {
@@ -66,8 +71,9 @@ async function loadpix() {
         pix[x] = new Array(ys);
         url[x] = new Array(ys);
         for (var y = 0; y < ys; y++) {
-            pix[x][y] = "black"
-            url[x][y] = ""
+            pix[x][y] = "black";
+            url[x][y] = "";
+            price[x][y] = initprice;
         }
     }
     let data = await nodeInteraction.accountDataByKey("",dappAddress,nodeUrl);
@@ -80,6 +86,7 @@ async function loadpix() {
             let x = n % xs;
             let y = parseInt((n - x) / xs);
             let params = item.value.split("|");
+            price[x][y] = parseInt(params[1]);
             if (params.length > 3) { pix[x][y] = params[3];}
             else {pix[x][y] = "white"}
             if (params.length > 4) { url[x][y] = params[4];}
@@ -128,12 +135,8 @@ document.getElementById("login").addEventListener("click", async function () {
 // save##################################################################################################
 document.getElementById("save").addEventListener("click", async function () {
     hide("savemenu");
-    editmode     = true; 
-    show("edit");
     lookmode     = false;
-    show("refresh");
     editmode = false;
-    lookmode = true;
     paintcommand = paintcommand + "||" + screencolor + "||" + document.getElementById("url").value;
     console.log("paintcommand=" + paintcommand);
     document.getElementById("zoom").style.visibility = "hidden";
@@ -145,8 +148,10 @@ document.getElementById("save").addEventListener("click", async function () {
         const user = await signer.login();
         //document.getElementById("claimraddress").innerHTML = 'Your address is: ' + user.address;
         console.log('user: ', user.address);
-        document.getElementById("message").innerHTML = " wait, please";
-        
+        document.getElementById("loginmessage").innerHTML = " Logged in as: " + user.address;
+        hide("login");
+        document.getElementById("message").innerHTML = '<div style="animation: blink 1s infinite;">blockchain working... wait about 2 minutes, please</div>';
+
         console.log("start invoke save");
         try {
             await signer.invoke({
@@ -155,7 +160,7 @@ document.getElementById("save").addEventListener("click", async function () {
                     function: "paint",
                     args:[{"type": "string", "value": paintcommand}]
                 },
-                payment: [{amount: 100000000, assetId:null }]
+                payment: [{amount: parseInt(pricecommand*(100+masterfee)/100), assetId: token }]
             }).broadcast({confirmations: 1}).then(resp => console.log(resp));
 
             let error = await geterror(user.address);
@@ -169,9 +174,21 @@ document.getElementById("save").addEventListener("click", async function () {
             }
              
             drawpix();
-        } catch (e) { console.error('save denied: ' + e); }; 
-    } catch (e) { console.error('save Login rejected: ' + e) };
-
+        } catch (e) { 
+            if (e.code == "1004") { 
+                message("save rejected by user");
+                console.error('save denied by user');}
+            else {console.error('save denied: ' + e); }
+        }; 
+    } catch (e) { 
+        message("log in rejected");
+        console.error('save Login rejected: ' + e) 
+    };
+    editmode = false;
+    screenmode = false;
+    lookmode = true;
+    show("refresh");
+    show("edit");
 });
 
 // отрисовка картинки
@@ -192,6 +209,11 @@ document.getElementById("paint").addEventListener("click", function (e) {
         let cy = Math.min(Math.max(e.clientY - 5*ps, picy), picy + pich - 10*ps);
         console.log("cursor coords: " + cx + "|" + cy);
         drawCursor(cx, cy);
+        if (cy > 600) {savemenuy = cy - 150; } else {savemenuy = cy + 20; }
+        if (cx > 700) {savemenux = cx - 250; } else {savemenux = cx + 20; }
+        console.log("savemenu coords: " + savemenux + "|" + savemenuy);
+        document.getElementById("savemenu").style.left = savemenux + "px";
+        document.getElementById("savemenu").style.top  = savemenuy + "px";
         message("click on segment to edit it");
     }
     if (lookmode) {
@@ -282,8 +304,7 @@ function drawScreen() {
 document.getElementById("zoom").addEventListener("click", function() {
     console.log("zoom click");
     screenmode = true;
-    //show("savemenu");
-    document.getElementById("savemenu").style.visibility = "visible";
+    show("savemenu");
     for (var i=0; i<10; i++) {
         scrpix[i] = new Array(10);
         for (var j=0; j<10; j++) {
@@ -303,11 +324,13 @@ document.getElementById("screen").addEventListener("click", function(e) {
         scrpix[px][py] = !scrpix[px][py]; 
         if (scrpix[px][py]) {
             markedcount++;
+            pricecommand = pricecommand + price[px+crsx][py+crsy];
             scr.fillStyle = screencolor;
             scr.fillRect(px*screenwidth, py*screenwidth, screenwidth, screenwidth);
         }
         else {
             markedcount--;
+            pricecommand = pricecommand - price[px+crsx][py+crsy];
             scr.fillStyle = pix[px+crsx][py+crsy];
             scr.fillRect(px*screenwidth, py*screenwidth, screenwidth, screenwidth);
         }
@@ -315,19 +338,19 @@ document.getElementById("screen").addEventListener("click", function(e) {
         console.log("screen click: " + px + "|" + py);   
         let marked = []
         let l = 0;
-        pricecommand = 0;
+        //pricecommand = 0;
         for (var i=0; i<10; i++) {
             for (var j=0; j<10; j++) {
                 if (scrpix[i][j]) {
                     marked[l] = (i+crsx)+(j+crsy)*xs;
                     l++;
-                    pricecommand += price[px+crsx][py+crsy];
+                    //pricecommand = pricecommand + price[px+crsx][py+crsy];
                 };
             }
         }
         paintcommand = marked.join("|");
-        message("marked pixes: " + markedcount);
-        console.log("paintcommand=" + paintcommand);
+        message("marked pixes: " + markedcount + " total price: " + pricecommand);
+        console.log("paintcommand=" + paintcommand + " total price: " + pricecommand);
     }
     else {
         message("max 28 pixes per painting");
