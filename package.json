@@ -5,7 +5,7 @@
     "author": "Waves Protocol",
     "scripts": {
         "build": "webpack",
-        "start": "http-server ./ -p 8081"
+        "start": "http-server ./ -p ${PORT:=8000}"
     },
     "dependencies": {
         "@waves.exchange/provider-web": "^1.0.2",
